@@ -1,21 +1,18 @@
-<!-- ==========================================
-File: index.html (２つの足し算を同時にやるアプリ / Dual Sum Trainer)
-公開先：GitHub Pages（リポジトリB）
-========================================== -->
 <!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>二重加算トレーナー（2つの足し算を同時に）</title>
+  <title>二重フラッシュ加算（同時）</title>
+  <!-- iPhone ホーム追加・PWA風メタ -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="二重加算">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0b0c10">
-  <link rel="apple-touch-icon" href="icon-180-dualsum.png?v=1">
+  <link rel="apple-touch-icon" href="icon-180-dualsum.png">
   <style>
-    :root { --bg:#0b0c10; --card:#111218; --ink:#eaeaea; --muted:#a9b0b8; --accent:#4dd0e1; --ok:#2ec27e; --warn:#ffb86b; }
+    :root { --bg:#0b0c10; --card:#111218; --ink:#eaeaea; --muted:#a9b0b8; --accent:#4dd0e1; --ok:#2ec27e; --ng:#ff6b6b; }
     body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;color:var(--ink);background:linear-gradient(180deg,#0d1117,#0b0c10 40%)}
     .wrap{max-width:860px;margin:20px auto 80px;padding:0 16px env(safe-area-inset-bottom)}
     .card{background:var(--card);border:1px solid #22252e;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
@@ -24,105 +21,168 @@ File: index.html (２つの足し算を同時にやるアプリ / Dual Sum Train
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:700;background:#1b2532;color:var(--ink);cursor:pointer}
     .btn.primary{background:linear-gradient(135deg,#3fb7c4,#2ea6ba);color:#071216}
-    .stat{display:flex;gap:8px;align-items:center}
-    .pill{border:1px solid #2a2f3a;background:#0f1218;border-radius:999px;padding:6px 10px;font-size:12px}
+    .btn.ghost{background:transparent;border:1px solid #2a2f3a}
+    .ctrl{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:6px 0 10px}
+    .ctrl label{font-size:12px;color:var(--muted)}
+    input[type="range"]{width:180px}
     .grid{display:grid;gap:12px}
     @media(min-width:720px){.grid-2{grid-template-columns:1fr 1fr}}
-    .cardq{background:#0f1218;border:1px solid #232833;border-radius:14px;padding:14px}
-    .q{text-align:center;font-size:26px;margin:6px 0 8px}
-    input[type="tel"]{width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid #2a2f3a;background:#0f1218;color:var(--ink);font-size:20px;text-align:center}
-    .ok{color:var(--ok);font-weight:700}
+    .panel{background:#0f1218;border:1px solid #232833;border-radius:14px;padding:20px;text-align:center}
+    .num{font-size:56px;line-height:1.1;margin:10px 0 6px}
+    .hint{color:#8a94a1;font-size:12px}
+    .ans{display:none;margin-top:12px}
+    .ans input{width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid #2a2f3a;background:#0f1218;color:var(--ink);font-size:20px;text-align:center}
+    .result{margin-top:10px;font-weight:700}
+    .ok{color:var(--ok)} .ng{color:var(--ng)}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>二重加算トレーナー</h1>
-      <p class="lead">2つの足し算を同時に解く。集中力・作業記憶の強化に。</p>
+      <h1>二重フラッシュ加算（同時）</h1>
+      <p class="lead">左右の数字列を同時にフラッシュ表示。合計を入力して判定。</p>
 
-      <div class="row" style="margin-bottom:8px;">
-        <button class="btn" id="easy">1桁</button>
-        <button class="btn" id="normal">2桁</button>
-        <button class="btn" id="hard">難しめ</button>
-        <button class="btn primary" id="start">スタート／次へ</button>
-        <div class="stat">
-          <span class="pill" id="count">正解 0</span>
-          <span class="pill" id="time">00:00</span>
+      <div class="ctrl">
+        <div>
+          <label>間隔（秒）<span id="ivOut" style="margin-left:6px;color:#c9d1d9;">3</span></label><br>
+          <input id="interval" type="range" min="1" max="10" step="1" value="3">
         </div>
+        <div>
+          <label>回数（個数）<span id="cntOut" style="margin-left:6px;color:#c9d1d9;">5</span></label><br>
+          <input id="count" type="range" min="3" max="10" step="1" value="5">
+        </div>
+        <button class="btn primary" id="start">スタート</button>
+        <button class="btn ghost" id="reset" disabled>リセット</button>
       </div>
 
       <div class="grid grid-2">
-        <div class="cardq">
-          <div class="q" id="q1">0 + 0 =</div>
-          <input id="a1" type="tel" inputmode="numeric" enterkeyhint="next" />
+        <div class="panel">
+          <div>左</div>
+          <div class="num" id="n1">—</div>
+          <div class="hint" id="p1">&nbsp;</div>
+          <div class="ans" id="ans1">
+            <input id="a1" type="tel" inputmode="numeric" enterkeyhint="next" placeholder="左の合計" />
+          </div>
         </div>
-        <div class="cardq">
-          <div class="q" id="q2">0 + 0 =</div>
-          <input id="a2" type="tel" inputmode="numeric" enterkeyhint="done" />
+        <div class="panel">
+          <div>右</div>
+          <div class="num" id="n2">—</div>
+          <div class="hint" id="p2">&nbsp;</div>
+          <div class="ans" id="ans2">
+            <input id="a2" type="tel" inputmode="numeric" enterkeyhint="done" placeholder="右の合計" />
+          </div>
         </div>
       </div>
 
-      <div class="row" style="margin-top:10px;">
-        <div id="feedback" class="pill">準備OK。スタートを押してください。</div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" id="judge" disabled>判定</button>
+        <div id="feedback" class="result">準備OK。スタートを押してください。</div>
       </div>
     </div>
   </div>
 
   <script>
     const $ = s => document.querySelector(s);
-    let difficulty = 'normal';
-    let curr = null; // {a,b,c,d}
-    let correct = 0;
-    let t0 = 0, timerId = 0;
 
-    function rnd(n){ return Math.floor(Math.random()*n) }
-    function gen(){
-      let a,b,c,d;
-      if(difficulty==='easy'){ a=rnd(9)+1; b=rnd(9)+1; c=rnd(9)+1; d=rnd(9)+1; }
-      else if(difficulty==='hard'){ a=rnd(70)+30; b=rnd(70)+30; c=rnd(70)+30; d=rnd(70)+30; }
-      else { a=rnd(90)+10; b=rnd(90)+10; c=rnd(90)+10; d=rnd(90)+10; }
-      curr = {a,b,c,d, s1:a+b, s2:c+d};
-      $('#q1').textContent = `${a} + ${b} =`;
-      $('#q2').textContent = `${c} + ${d} =`;
-      $('#a1').value=''; $('#a2').value='';
-      $('#a1').focus();
-      $('#feedback').textContent='2つとも正解で「次へ」。';
-      $('#feedback').classList.remove('ok');
-    }
+    // Settings
+    const iv = $('#interval');
+    const cnt = $('#count');
+    const ivOut = $('#ivOut');
+    const cntOut = $('#cntOut');
+    iv.addEventListener('input', ()=> ivOut.textContent = iv.value);
+    cnt.addEventListener('input', ()=> cntOut.textContent = cnt.value);
 
-    function start(){ if(!t0){ t0=Date.now(); tick(); } gen(); }
+    // UI refs
+    const n1=$('#n1'), n2=$('#n2');
+    const p1=$('#p1'), p2=$('#p2');
+    const ans1=$('#ans1'), ans2=$('#ans2');
+    const a1=$('#a1'), a2=$('#a2');
+    const startBtn=$('#start'), resetBtn=$('#reset'), judgeBtn=$('#judge');
+    const feedback=$('#feedback');
 
-    function tick(){ timerId = setInterval(()=>{
-      const s = Math.floor((Date.now()-t0)/1000);
-      const mm = ('0'+Math.floor(s/60)).slice(-2);
-      const ss = ('0'+(s%60)).slice(-2);
-      $('#time').textContent = `${mm}:${ss}`;
-    }, 250); }
+    // State
+    let timer = 0, idx = 0, seq1=[], seq2=[], sum1=0, sum2=0, running=false;
 
-    function check(){
-      const a1 = parseInt($('#a1').value,10), a2 = parseInt($('#a2').value,10);
-      const ok1 = (a1===curr.s1); const ok2 = (a2===curr.s2);
-      if(ok1 && ok2){
-        correct++; $('#count').textContent = `正解 ${correct}`;
-        $('#feedback').textContent='正解！ 次へで続行';
-        $('#feedback').classList.add('ok');
-      } else {
-        $('#feedback').textContent = `${ok1?'左OK':'左×'} / ${ok2?'右OK':'右×'}`;
-        $('#feedback').classList.remove('ok');
+    function rndInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min }
+
+    function genSequences(count){
+      seq1 = []; seq2 = []; sum1=0; sum2=0;
+      for(let i=0;i<count;i++){
+        const a=rndInt(1,9), b=rndInt(1,9); // 1桁ランダム
+        seq1.push(a); seq2.push(b);
+        sum1+=a; sum2+=b;
       }
     }
 
+    function showStep(i){
+      n1.textContent = seq1[i];
+      n2.textContent = seq2[i];
+      p1.textContent = `${i+1}/${seq1.length}`;
+      p2.textContent = `${i+1}/${seq2.length}`;
+    }
+
+    function enterAnswerPhase(){
+      running=false;
+      clearTimeout(timer);
+      n1.textContent = '？'; n2.textContent = '？';
+      p1.textContent = '合計を入力'; p2.textContent = '合計を入力';
+      ans1.style.display = 'block'; ans2.style.display = 'block';
+      judgeBtn.disabled = false;
+      feedback.textContent = '左右の合計を入力して「判定」。';
+      try{ a1.focus(); }catch(_){ }
+    }
+
+    function scheduleNext(){
+      const intervalMs = parseInt(iv.value,10)*1000;
+      timer = setTimeout(()=>{
+        idx++;
+        if(idx < seq1.length){ showStep(idx); scheduleNext(); }
+        else { enterAnswerPhase(); }
+      }, intervalMs);
+    }
+
+    function start(){
+      if(running) return;
+      running = true;
+      // reset UI
+      clearTimeout(timer); idx=0;
+      ans1.style.display='none'; ans2.style.display='none'; judgeBtn.disabled=true;
+      a1.value=''; a2.value='';
+      feedback.textContent = '進行中…';
+      // sequences
+      genSequences(parseInt(cnt.value,10));
+      // first step immediately
+      showStep(0); scheduleNext();
+      startBtn.disabled = true; resetBtn.disabled=false;
+    }
+
+    function reset(){
+      running=false; clearTimeout(timer); idx=0;
+      n1.textContent='—'; n2.textContent='—'; p1.textContent='\u00a0'; p2.textContent='\u00a0';
+      ans1.style.display='none'; ans2.style.display='none'; judgeBtn.disabled=true;
+      a1.value=''; a2.value='';
+      feedback.textContent='準備OK。スタートを押してください。';
+      startBtn.disabled=false; resetBtn.disabled=true;
+    }
+
+    function judge(){
+      const v1 = parseInt(a1.value,10); const v2 = parseInt(a2.value,10);
+      const ok1 = (v1 === sum1); const ok2 = (v2 === sum2);
+      const mark1 = ok1 ? `左：正解（${sum1}）` : `左：不正解 → 正：${sum1}`;
+      const mark2 = ok2 ? `右：正解（${sum2}）` : `右：不正解 → 正：${sum2}`;
+      feedback.innerHTML = `<span class="${ok1?'ok':'ng'}">${mark1}</span>　/　<span class="${ok2?'ok':'ng'}">${mark2}</span>`;
+      // 次のゲームの準備
+      startBtn.disabled=false; resetBtn.disabled=false; running=false;
+    }
+
+    // events
     window.addEventListener('DOMContentLoaded', ()=>{
-      $('#easy').addEventListener('click', ()=>{ difficulty='easy'; gen(); });
-      $('#normal').addEventListener('click', ()=>{ difficulty='normal'; gen(); });
-      $('#hard').addEventListener('click', ()=>{ difficulty='hard'; gen(); });
-      $('#start').addEventListener('click', ()=>{ start(); });
-
-      $('#a1').addEventListener('input', check);
-      $('#a2').addEventListener('input', check);
-
-      // 画面起動時の初期問題
-      gen();
+      ivOut.textContent = iv.value; cntOut.textContent = cnt.value;
+      startBtn.addEventListener('click', start);
+      resetBtn.addEventListener('click', reset);
+      judgeBtn.addEventListener('click', judge);
+      a1.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); a2.focus(); } });
+      a2.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); judge(); } });
     });
   </script>
 </body>
