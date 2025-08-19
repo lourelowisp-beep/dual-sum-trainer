@@ -40,7 +40,7 @@
   <div class="wrap">
     <div class="card">
       <h1>二重フラッシュ加算（同時）</h1>
-      <p class="lead">左右の数字列を同時にフラッシュ表示。合計を入力して判定。</p>
+      <p class="lead">上下の数字列を同時にフラッシュ表示。合計を入力して判定。</p>
 
       <div class="ctrl">
         <div>
@@ -48,8 +48,8 @@
           <input id="interval" type="range" min="1" max="10" step="1" value="3">
         </div>
         <div>
-          <label>回数（個数）<span id="cntOut" style="margin-left:6px;color:#c9d1d9;">5</span></label><br>
-          <input id="count" type="range" min="3" max="10" step="1" value="5">
+          <label>回数（個数）<span id="cntOut" style="margin-left:6px;color:#c9d1d9;">3</span></label><br>
+          <input id="count" type="range" min="3" max="10" step="1" value="3">
         </div>
         <button class="btn primary" id="start">スタート</button>
         <button class="btn ghost" id="reset" disabled>リセット</button>
@@ -57,19 +57,19 @@
 
       <div class="grid grid-2">
         <div class="panel">
-          <div>左</div>
+          <div>上</div>
           <div class="num" id="n1">—</div>
           <div class="hint" id="p1">&nbsp;</div>
           <div class="ans" id="ans1">
-            <input id="a1" type="tel" inputmode="numeric" enterkeyhint="next" placeholder="左の合計" />
+            <input id="a1" type="tel" inputmode="numeric" enterkeyhint="next" placeholder="上の合計" />
           </div>
         </div>
         <div class="panel">
-          <div>右</div>
+          <div>下</div>
           <div class="num" id="n2">—</div>
           <div class="hint" id="p2">&nbsp;</div>
           <div class="ans" id="ans2">
-            <input id="a2" type="tel" inputmode="numeric" enterkeyhint="done" placeholder="右の合計" />
+            <input id="a2" type="tel" inputmode="numeric" enterkeyhint="done" placeholder="下の合計" />
           </div>
         </div>
       </div>
@@ -128,7 +128,7 @@
       p1.textContent = '合計を入力'; p2.textContent = '合計を入力';
       ans1.style.display = 'block'; ans2.style.display = 'block';
       judgeBtn.disabled = false;
-      feedback.textContent = '左右の合計を入力して「判定」。';
+      feedback.textContent = '上下の合計を入力して「判定」。';
       try{ a1.focus(); }catch(_){ }
     }
 
@@ -168,8 +168,8 @@
     function judge(){
       const v1 = parseInt(a1.value,10); const v2 = parseInt(a2.value,10);
       const ok1 = (v1 === sum1); const ok2 = (v2 === sum2);
-      const mark1 = ok1 ? `左：正解（${sum1}）` : `左：不正解 → 正：${sum1}`;
-      const mark2 = ok2 ? `右：正解（${sum2}）` : `右：不正解 → 正：${sum2}`;
+      const mark1 = ok1 ? `上：正解（${sum1}）` : `上：不正解 → 正：${sum1}`;
+      const mark2 = ok2 ? `下：正解（${sum2}）` : `下：不正解 → 正：${sum2}`;
       feedback.innerHTML = `<span class="${ok1?'ok':'ng'}">${mark1}</span>　/　<span class="${ok2?'ok':'ng'}">${mark2}</span>`;
       // 次のゲームの準備
       startBtn.disabled=false; resetBtn.disabled=false; running=false;
