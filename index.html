@@ -1,0 +1,129 @@
+<!-- ==========================================
+File: index.html (２つの足し算を同時にやるアプリ / Dual Sum Trainer)
+公開先：GitHub Pages（リポジトリB）
+========================================== -->
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>二重加算トレーナー（2つの足し算を同時に）</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="二重加算">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0b0c10">
+  <link rel="apple-touch-icon" href="icon-180-dualsum.png?v=1">
+  <style>
+    :root { --bg:#0b0c10; --card:#111218; --ink:#eaeaea; --muted:#a9b0b8; --accent:#4dd0e1; --ok:#2ec27e; --warn:#ffb86b; }
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;color:var(--ink);background:linear-gradient(180deg,#0d1117,#0b0c10 40%)}
+    .wrap{max-width:860px;margin:20px auto 80px;padding:0 16px env(safe-area-inset-bottom)}
+    .card{background:var(--card);border:1px solid #22252e;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+    h1{margin:0 0 8px;font-size:clamp(20px,3.2vw,28px)}
+    p.lead{color:var(--muted);margin:0 0 10px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-weight:700;background:#1b2532;color:var(--ink);cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,#3fb7c4,#2ea6ba);color:#071216}
+    .stat{display:flex;gap:8px;align-items:center}
+    .pill{border:1px solid #2a2f3a;background:#0f1218;border-radius:999px;padding:6px 10px;font-size:12px}
+    .grid{display:grid;gap:12px}
+    @media(min-width:720px){.grid-2{grid-template-columns:1fr 1fr}}
+    .cardq{background:#0f1218;border:1px solid #232833;border-radius:14px;padding:14px}
+    .q{text-align:center;font-size:26px;margin:6px 0 8px}
+    input[type="tel"]{width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid #2a2f3a;background:#0f1218;color:var(--ink);font-size:20px;text-align:center}
+    .ok{color:var(--ok);font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>二重加算トレーナー</h1>
+      <p class="lead">2つの足し算を同時に解く。集中力・作業記憶の強化に。</p>
+
+      <div class="row" style="margin-bottom:8px;">
+        <button class="btn" id="easy">1桁</button>
+        <button class="btn" id="normal">2桁</button>
+        <button class="btn" id="hard">難しめ</button>
+        <button class="btn primary" id="start">スタート／次へ</button>
+        <div class="stat">
+          <span class="pill" id="count">正解 0</span>
+          <span class="pill" id="time">00:00</span>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="cardq">
+          <div class="q" id="q1">0 + 0 =</div>
+          <input id="a1" type="tel" inputmode="numeric" enterkeyhint="next" />
+        </div>
+        <div class="cardq">
+          <div class="q" id="q2">0 + 0 =</div>
+          <input id="a2" type="tel" inputmode="numeric" enterkeyhint="done" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div id="feedback" class="pill">準備OK。スタートを押してください。</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    let difficulty = 'normal';
+    let curr = null; // {a,b,c,d}
+    let correct = 0;
+    let t0 = 0, timerId = 0;
+
+    function rnd(n){ return Math.floor(Math.random()*n) }
+    function gen(){
+      let a,b,c,d;
+      if(difficulty==='easy'){ a=rnd(9)+1; b=rnd(9)+1; c=rnd(9)+1; d=rnd(9)+1; }
+      else if(difficulty==='hard'){ a=rnd(70)+30; b=rnd(70)+30; c=rnd(70)+30; d=rnd(70)+30; }
+      else { a=rnd(90)+10; b=rnd(90)+10; c=rnd(90)+10; d=rnd(90)+10; }
+      curr = {a,b,c,d, s1:a+b, s2:c+d};
+      $('#q1').textContent = `${a} + ${b} =`;
+      $('#q2').textContent = `${c} + ${d} =`;
+      $('#a1').value=''; $('#a2').value='';
+      $('#a1').focus();
+      $('#feedback').textContent='2つとも正解で「次へ」。';
+      $('#feedback').classList.remove('ok');
+    }
+
+    function start(){ if(!t0){ t0=Date.now(); tick(); } gen(); }
+
+    function tick(){ timerId = setInterval(()=>{
+      const s = Math.floor((Date.now()-t0)/1000);
+      const mm = ('0'+Math.floor(s/60)).slice(-2);
+      const ss = ('0'+(s%60)).slice(-2);
+      $('#time').textContent = `${mm}:${ss}`;
+    }, 250); }
+
+    function check(){
+      const a1 = parseInt($('#a1').value,10), a2 = parseInt($('#a2').value,10);
+      const ok1 = (a1===curr.s1); const ok2 = (a2===curr.s2);
+      if(ok1 && ok2){
+        correct++; $('#count').textContent = `正解 ${correct}`;
+        $('#feedback').textContent='正解！ 次へで続行';
+        $('#feedback').classList.add('ok');
+      } else {
+        $('#feedback').textContent = `${ok1?'左OK':'左×'} / ${ok2?'右OK':'右×'}`;
+        $('#feedback').classList.remove('ok');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', ()=>{
+      $('#easy').addEventListener('click', ()=>{ difficulty='easy'; gen(); });
+      $('#normal').addEventListener('click', ()=>{ difficulty='normal'; gen(); });
+      $('#hard').addEventListener('click', ()=>{ difficulty='hard'; gen(); });
+      $('#start').addEventListener('click', ()=>{ start(); });
+
+      $('#a1').addEventListener('input', check);
+      $('#a2').addEventListener('input', check);
+
+      // 画面起動時の初期問題
+      gen();
+    });
+  </script>
+</body>
+</html>
